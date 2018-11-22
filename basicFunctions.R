@@ -1,4 +1,11 @@
+logg <- function(FUN,msg){ print(paste(Sys.time(),FUN,":",msg,sep=" "))}
+loggVar <- function(FUN,var){ logg(FUN,paste(substitute(var),var,sep="="))}
+loggResultatDf <- function(FUN,df){logg(FUN,paste("Returning data frame with",getDfRowsColMsg(df)))}
+getDfRowsColMsg <- function(df) {return(paste(nrow(x=df),"rows and",ncol(x=df),"columns"))}
+getVectorLogMsg <- function(vec) { return(paste(length(vec),deparse(substitute(vec)),"=",paste(vec,collapse=","))) }
+
 fitVecToRgb <- function(vec){return(c(vec[1]%%256,vec[2]%%256,vec[3]%%256))}
+
 vecToCol <- function(vec){
   V <- fitVecToRgb(vec)
   return(rgb(red=V[1],green=V[2],blue=V[3],maxColorValue=255))
@@ -10,7 +17,7 @@ getFarben <- function(farbPalette=rainbow,numCols=4,claritas=1) {
 }
 getNonNullValue <- function(wert,ersatz){
   if("NULL"==class(wert)) {
-    print(paste("getNonNullValue: NULL==class(wert) using ersatz",ersatz,sep="="))
+    logg("getNonNullValue",paste("NULL==class(wert) using ersatz",ersatz,sep="="))
     resultat <- ersatz
   } else {resultat <- wert}
   # if(is.na(resultat)) {resultat <- ersatz}

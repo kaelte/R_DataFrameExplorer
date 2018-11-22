@@ -1,10 +1,12 @@
 sortFrameByFstCol <- function(dataFrame,desc=FALSE) {
-  return(dataFrame[do.call(order,c(dataFrame,list(decreasing=FALSE,method="radix"))),])
+  resultat <- dataFrame[do.call(order,c(dataFrame,list(decreasing=FALSE,method="radix"))),]
+  loggResultatDf("sortFrameByFstCol",df=resultat)
+  return(resultat)
 }
 replaceNaInDf <- function(df,cols,replacement) {
   resultat <- df
   if (0==nrow(df)){
-    print("replaceNaInDf: Input data frame is empty. Nothing to do!")
+    logg("replaceNaInDf","Input data frame is empty. Nothing to do!")
   } else {
     for (c in cols){
       resultat[is.na(resultat[,c]),c] <- replacement
@@ -16,6 +18,7 @@ completeGroupedDataFrame <- function(df,fillValue) {
   ### fillValue of type y
   ### this functions adds lines (Gruppe,x,fillValue)
   ### so that for all Gruppe the same set of xValues is present
+  logg("completeGroupedDataFrame",paste("Completing data frame with",nrow(x=df),"rows."))
   gruppen <- unique(df$Gruppe)
   xWerte <- unique(df$x)
   yWerte <- as.vector(unique(df$y))
@@ -23,6 +26,7 @@ completeGroupedDataFrame <- function(df,fillValue) {
   if (0<nrow(missingLines)) { missingLines$y <- fillValue
   }
   resultat <- rbind(x=replaceNaInDf(df=df,cols=c("y"),replacement=fillValue),y=missingLines)
+  loggResultatDf("completeGroupedDataFrame",df=resultat)
   return(resultat)
 }
 getColTypes <- function(df) {
@@ -39,13 +43,40 @@ getColTypes <- function(df) {
   return(result)
 }
 
+# replaceBoolByChar <- function(df) {
+#   resultat <- df
+#   if (0<nrow(x=df)) {
+#     for (col in colnames(resultat)) {
+#       if (is.logical(resultat[1,col])) {
+#         logg("replaceBoolByChar",paste("Column",col,"is logical. Converting to character"))
+#         resultat[col] <- lapply(X=resultat[col],FUN=as.character)
+#       } else {resultat[col] <- resultat[col]}
+#     }
+#   }
+#   loggResultatDf("replaceBoolByChar",df=resultat)
+#   return(resultat)
+# }
+
+replaceBoolByChar <- function(df) {
+  resultat <- df
+  if (0<nrow(x=df)) {
+    dfTypes <- getColTypes(df=inputDf)
+    logicalCols <- as.vector(dfTypes["logical"==dfTypes$COLTYP,c("COLNAME")])
+    for (col in logicalCols) {
+        logg("replaceBoolByChar",paste("Column",col,"is logical. Converting to character"))
+        resultat[col] <- lapply(X=resultat[col],FUN=as.character)
+    }
+  }
+  loggResultatDf("replaceBoolByChar",df=resultat)
+  return(resultat)
+}
+
 aggDf <- function(x,by,FUN) {
   if (0 == length(by[[names(by)[1]]])) {
     resultat <- data.frame(by,x)} else { resultat <- aggregate.data.frame(x,by,FUN)
     }
   return(resultat)
 }
-
 opColumn <- function(dataFrame,operator,fstCol,sndCol,newCol) {
   resultat <- dataFrame
   resultat[c(newCol)] <- NA

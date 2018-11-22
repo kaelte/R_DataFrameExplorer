@@ -8,6 +8,10 @@ source(local=TRUE,file="plotFunctions.R")
 ###############
 ### inputDf ###
 ###############
+
+### Due to the bug https://github.com/rstudio/ggvis/issues/303
+### we need to voncert boolean values to character
+inputDf <- replaceBoolByChar(inputDf)
 dataTypes <- getColTypes(df=inputDf)
 kpiTypes <- c("integer","numeric")
 timeTypes <- c("Date","POSIXct","POSIXt")
@@ -18,17 +22,27 @@ timCols <- as.vector(dataTypes[dataTypes$COLTYP %in% timeTypes,c("COLNAME")])
 
 getData <- function(dimensionen,desiredKpis) {
   ### function to aggregate inputDf to the desired dimensions
-  print(paste("getData: dimensionen",dimensionen,sep="="))
-  print(paste("getData: desiredKpis",desiredKpis,sep="="))
-  foundKpis <- intersect(x=kpis,y=desiredKpis)
-  print(paste("getData: foundKpis",foundKpis,sep="="))
-  if (length(dimensionen)==length(dims)) {
-    resultat <- inputDf[,c(dimensionen,foundKpis)]
+  logg("getData",getVectorLogMsg(dimensionen))
+  logg("getData",getVectorLogMsg(desiredKpis))
+  dimensionenUnique <- as.vector(unique(dimensionen))
+  desiredKpisUnique <- as.vector(unique(desiredKpis))
+  foundKpis <- intersect(x=kpis,y=desiredKpisUnique)
+  logg("getData",getVectorLogMsg(foundKpis))
+  if (length(dimensionenUnique)==length(dims)) {
+    logg("getData"
+         ,paste("All dimensions selected; No need to aggregate :) length(dimensionenUnique)==length(dims)"
+                ,length(dimensionenUnique)==length(dims)
+                ,sep=" = "))
+    resultat <- inputDf[,c(dimensionenUnique,foundKpis)]
+  } else if (0==length(foundKpis)) {
+    logg("getData","No kpis found. Returning just the dimensions.")
+    resultat <- unique(inputDf[,c(dimensionenUnique,foundKpis)])
   } else {
-    resultat <- aggDf(x=inputDf[,foundKpis],by=inputDf[,dimensionen],FUN=sum) %>% sortFrameByFstCol
+    resultat <- aggDf(x=inputDf[,foundKpis],by=inputDf[,dimensionenUnique],FUN=sum) %>% sortFrameByFstCol
     ### Wenn nur 1 kpi ausgewaehlt, dann heisst diese Spalte x, was aber nicht sein sollte
     if (1==length(foundKpis)) {colnames(resultat) <- gsub(x=colnames(resultat),pattern="x",replacement=foundKpis[1])}
   }
+  loggResultatDf("getData",df=resultat)
   return(resultat)
 }
 
@@ -136,9 +150,9 @@ serverFunction <- function(input, output) {
   analyseWuerfel <- reactive(x={
     input$setDimButton
     isolate(expr={
-      resultat <- getData(dimensionen=input$dim
-                          ,desiredKpis=c(columUnum(),columUnum(),columDuo()))
+      resultat <- getData(dimensionen=input$dim,desiredKpis=c(columUnum(),columDuo()))
     })
+    loggResultatDf("analyseWuerfel",df=resultat)
     return(resultat)
   })
   
@@ -212,6 +226,7 @@ serverFunction <- function(input, output) {
       anacolumUnum <- getNonNullValue(wert=input$anacolumUnum,ersatz=c(0,1))
       anacolumDuo <- getNonNullValue(wert=input$anacolumDuo,ersatz=c(0,1))
       neededKpis <- intersect(x=kpis,y=c(abszissenData,ordinatenData,gruppierung,colUnumData,colDuoData))
+      logg("analyseDaten",getVectorLogMsg(neededKpis))
       granular <- getData(dimensionen=input$dim,desiredKpis=neededKpis)
 
       # ColumnUnum
@@ -265,14 +280,16 @@ serverFunction <- function(input, output) {
       resultat$Gruppe <- resultat[,c(gruppierung)]
       resultat <- sortFrameByFstCol(dataFrame=resultat[!is.na(resultat$y),c("Gruppe","x","y")])
     })
+    loggResultatDf("analyseDaten",df=resultat)
     return(resultat)
   })
   
   observe(x={
     input$goButton
-    isolate(expr={
+    # isolate(expr={
       xTitel <- getFormula(operator=input$abszissenOP,xVec=abszissenCols())
       yTitel <- getFormula(operator=input$ordinatenOP,xVec=ordinatenCols())
+      loggVar("observe",yTitel)
       gruppierung <- getNonNullValue(wert=input$Gruppierung,ersatz=grps[1])
       titel <- ""
       analyseShowValueFun <- function(df){
@@ -288,11 +305,12 @@ serverFunction <- function(input, output) {
         return(resultat)
       }
       
-      getGgvisPlot(df=analyseDaten(),trend=as.logical(input$Analysentrend)
+      plot <- getGgvisPlot(df=analyseDaten(),trend=as.logical(input$Analysentrend)
                         ,xTitel=xTitel,yTitel=yTitel,plotTitel=titel,gesamtgruppenname=NA
-                        ,sizeFactor=c(6/5,8/9),showValueFun=analyseShowValueFun) %>%
-        bind_shiny("analysePlot")
-    })
+                        ,sizeFactor=c(6/5,8/9),showValueFun=analyseShowValueFun)
+      logg("observe","bind_shiny(plot,analysePlot)")
+      bind_shiny(plot,"analysePlot")
+    # })
   })
 }
 
