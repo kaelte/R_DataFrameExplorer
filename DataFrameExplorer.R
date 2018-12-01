@@ -20,13 +20,13 @@ kpis <- as.vector(dataTypes[dataTypes$COLTYP %in% kpiTypes,c("COLNAME")])
 grps <- as.vector(dataTypes[dataTypes$NUM_UNIQUE < 9,c("COLNAME")])
 timCols <- as.vector(dataTypes[dataTypes$COLTYP %in% timeTypes,c("COLNAME")])
 
-getData <- function(dimensionen,desiredKpis) {
+getData <- function(dimensionen,desiredCols) {
   ### function to aggregate inputDf to the desired dimensions
   logg("getData",getVectorLogMsg(dimensionen))
-  logg("getData",getVectorLogMsg(desiredKpis))
+  logg("getData",getVectorLogMsg(desiredCols))
   dimensionenUnique <- as.vector(unique(dimensionen))
-  desiredKpisUnique <- as.vector(unique(desiredKpis))
-  foundKpis <- intersect(x=kpis,y=desiredKpisUnique)
+  desiredColsUnique <- as.vector(unique(desiredCols))
+  foundKpis <- intersect(x=kpis,y=desiredColsUnique)
   logg("getData",getVectorLogMsg(foundKpis))
   if (length(dimensionenUnique)==length(dims)) {
     logg("getData"
@@ -150,7 +150,7 @@ serverFunction <- function(input, output) {
   analyseWuerfel <- reactive(x={
     input$setDimButton
     isolate(expr={
-      resultat <- getData(dimensionen=input$dim,desiredKpis=c(columUnum(),columDuo()))
+      resultat <- getData(dimensionen=input$dim,desiredCols=c(columUnum(),columDuo()))
     })
     loggResultatDf("analyseWuerfel",df=resultat)
     return(resultat)
@@ -227,7 +227,7 @@ serverFunction <- function(input, output) {
       anacolumDuo <- getNonNullValue(wert=input$anacolumDuo,ersatz=c(0,1))
       neededKpis <- intersect(x=kpis,y=c(abszissenData,ordinatenData,gruppierung,colUnumData,colDuoData))
       logg("analyseDaten",getVectorLogMsg(neededKpis))
-      granular <- getData(dimensionen=input$dim,desiredKpis=neededKpis)
+      granular <- getData(dimensionen=input$dim,desiredCols=neededKpis)
 
       # ColumnUnum
       granular$cUnum <- as.vector(granular[,c(colUnumData)])

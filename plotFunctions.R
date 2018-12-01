@@ -58,10 +58,12 @@ getGgvisPlot <- function(df,trend=TRUE,farbPalette="rainbow",gesamtgruppenname="
       set_options(height=sizeFactor[2]*5*2^7, width=sizeFactor[1]*3*2^9,renderer="svg")
     
     logg("getGgvisPlot",msg="Adding to plot legend, axis titles and tooltips.")
+    yTitelOffset<- 9*max(nchar(sapply(getUniqueVector(df$y),toString)))
+    loggVar("getGgvisPlot",yTitelOffset)
     resultat <- add_legend(vis=resultat,title="",scales="fill") %>%
       hide_legend(scales="stroke") %>%
       add_axis(type="x",title=xTitel) %>%
-      add_axis(type="y",title=yTitel,title_offset=8*max(nchar(df$y))) %>%
+      add_axis(type="y",title=yTitel,title_offset=yTitelOffset) %>%
       add_axis("x",orient="top",ticks=0
                ,title=plotTitel
                ,properties=axis_props(axis=list(stroke="white")

@@ -43,20 +43,6 @@ getColTypes <- function(df) {
   return(result)
 }
 
-# replaceBoolByChar <- function(df) {
-#   resultat <- df
-#   if (0<nrow(x=df)) {
-#     for (col in colnames(resultat)) {
-#       if (is.logical(resultat[1,col])) {
-#         logg("replaceBoolByChar",paste("Column",col,"is logical. Converting to character"))
-#         resultat[col] <- lapply(X=resultat[col],FUN=as.character)
-#       } else {resultat[col] <- resultat[col]}
-#     }
-#   }
-#   loggResultatDf("replaceBoolByChar",df=resultat)
-#   return(resultat)
-# }
-
 replaceBoolByChar <- function(df) {
   resultat <- df
   if (0<nrow(x=df)) {
