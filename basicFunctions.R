@@ -27,6 +27,7 @@ getFormula <- function(operator,xVec){
   if ("none" == operator) {resultat <- xVec[1]} else {resultat <- paste(xVec,collapse=operator)}
   return(resultat)
 }
+getUniqueVector <- function(x) {return(as.vector(unique(x)))}
 
 getTimeFormat <- function(typeString) {return(ifelse("Date"==typeString,"%Y-%m-%d","%Y-%m-%d %H:%M:%S"))}
 milliSecondsToDate <- function(t) {return(as.Date(origin="1970-01-01",x=t/(24*3600*1000)))}
